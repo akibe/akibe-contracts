@@ -12,7 +12,6 @@ export async function deployContractFixture() {
   const contract = await ethers.deployContract(tokenContName, [
     tokenName,
     tokenSymbol,
-    '',
     1000,
   ])
 
