@@ -1,0 +1,19 @@
+{
+  "name": "@akibe/contracts",
+  "description": "Smart Contract library for Solidity",
+  "version": "1.0.0",
+  "files": [
+    "**/*.sol",
+    "/build/contracts/*.json",
+    "!/mocks/**/*"
+  ],
+  "keywords": [
+    "solidity",
+    "ethereum",
+    "smart",
+    "contracts",
+    "akibe"
+  ],
+  "author": "akibe <dev@akibe.com>",
+  "license": "MIT"
+}

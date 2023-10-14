@@ -2,22 +2,53 @@
   "name": "akibe-contracts",
   "description": "Smart Contract library for Solidity",
   "version": "1.0.0",
+  "private": true,
   "files": [
-    "**/*.sol",
-    "/build/contracts/*.json",
-    "!/mocks/**/*"
-  ],
-  "keywords": [
-    "solidity",
-    "ethereum",
-    "smart",
-    "contracts",
-    "akibe"
+    "/contracts/**/*.sol",
+    "!/contracts/mocks/**/*"
   ],
   "author": "akibe <dev@akibe.com>",
   "license": "MIT",
+  "scripts": {
+    "test": "yarn hardhat test",
+    "coverage": "yarn hardhat coverage",
+    "compile": "yarn hardhat compile"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "semi": false
+  },
+  "eslintConfig": {
+    "extends": [
+      "next/core-web-vitals",
+      "prettier"
+    ]
+  },
   "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.2",
+    "@nomicfoundation/hardhat-ethers": "^3.0.4",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.9",
     "@nomicfoundation/hardhat-toolbox-viem": "^1.0.0",
-    "hardhat": "^2.18.1"
+    "@nomicfoundation/hardhat-verify": "^1.1.1",
+    "@nomicfoundation/hardhat-viem": "^1.0.0",
+    "@typechain/ethers-v6": "^0.5.0",
+    "@typechain/hardhat": "^9.0.0",
+    "@types/chai": "^4.3.8",
+    "@types/chai-as-promised": "^7.1.6",
+    "@types/mocha": "^10.0.2",
+    "chai": "^4.3.10",
+    "dotenv": "^16.3.1",
+    "ethers": "^6.8.0",
+    "hardhat": "^2.18.1",
+    "hardhat-gas-reporter": "^1.0.9",
+    "solidity-coverage": "^0.8.5",
+    "ts-node": "^10.9.1",
+    "typechain": "^8.3.1",
+    "typescript": "^5.2.2",
+    "viem": "^1.16.5"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.0",
+    "@openzeppelin/merkle-tree": "^1.0.5"
   }
 }
