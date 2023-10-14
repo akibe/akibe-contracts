@@ -27,15 +27,13 @@ contract ERC721PresetToken is
     // Variables
     // ==========-==========-==========-==========-==========-==========
     bytes32 public constant MINTER_ROLE = keccak256('MINTER_ROLE');
-
-    string internal _baseTokenURI = '';
+    string internal _baseTokenURI;
 
     // ==========-==========-==========-==========-==========-==========
     // ERC721 Interface
     // ==========-==========-==========-==========-==========-==========
 
-     constructor(string memory name, string memory symbol, string memory baseTokenURI, uint96 royalty) ERC721(name, symbol) Ownable(msg.sender) {
-        _baseTokenURI = baseTokenURI;
+     constructor(string memory name, string memory symbol, uint96 royalty) ERC721(name, symbol) Ownable(msg.sender) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
         _setDefaultRoyalty(msg.sender, royalty);
