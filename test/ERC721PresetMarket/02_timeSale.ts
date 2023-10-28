@@ -19,8 +19,8 @@ describe('Time Sale', function () {
         .connect(obj.owner)
         .setCurrentSale(
           1,
-          Math.floor(Date.now() / 1000) - 20,
-          Math.floor(Date.now() / 1000) - 10,
+          Math.floor(Date.now() / 1000) - 200,
+          Math.floor(Date.now() / 1000) - 100,
           ethers.parseEther('0.1'),
           1,
           ethers.ZeroHash
@@ -33,7 +33,7 @@ describe('Time Sale', function () {
 
   it('時間後でMintできない', async function () {
     await expect(
-      obj.market.connect(obj.guest).mint(1, 0, [], {
+      obj.market.connect(obj.guest).mint(obj.guest.address, 1, 0, [], {
         value: ethers.parseEther('0.1'),
       })
     ).to.be.revertedWithCustomError(obj.market, 'SaleHasEnded')
@@ -45,8 +45,8 @@ describe('Time Sale', function () {
         .connect(obj.owner)
         .setCurrentSale(
           2,
-          Math.floor(Date.now() / 1000) + 10,
-          Math.floor(Date.now() / 1000) + 20,
+          Math.floor(Date.now() / 1000) + 100,
+          Math.floor(Date.now() / 1000) + 200,
           ethers.parseEther('0.1'),
           2,
           ethers.ZeroHash
@@ -59,7 +59,7 @@ describe('Time Sale', function () {
 
   it('時間前でMintできない', async function () {
     await expect(
-      obj.market.connect(obj.guest).mint(2, 0, [], {
+      obj.market.connect(obj.guest).mint(obj.guest.address, 2, 0, [], {
         value: ethers.parseEther('0.1'),
       })
     ).to.be.revertedWithCustomError(obj.market, 'SaleHasNotStarted')
@@ -71,8 +71,8 @@ describe('Time Sale', function () {
         .connect(obj.owner)
         .setCurrentSale(
           3,
-          Math.floor(Date.now() / 1000) - 10,
-          Math.floor(Date.now() / 1000) + 10,
+          Math.floor(Date.now() / 1000) - 100,
+          Math.floor(Date.now() / 1000) + 100,
           ethers.parseEther('0.1'),
           3,
           ethers.ZeroHash
@@ -85,7 +85,7 @@ describe('Time Sale', function () {
 
   it('時間内はMintできる', async function () {
     await expect(
-      obj.market.connect(obj.guest).mint(3, 0, [], {
+      obj.market.connect(obj.guest).mint(obj.guest.address, 3, 0, [], {
         value: ethers.parseEther('0.1'),
       })
     )

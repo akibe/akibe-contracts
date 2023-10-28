@@ -8,10 +8,9 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import '@openzeppelin/contracts/access/Ownable.sol';
-import './extensions/Withdrawable.sol';
-import './extensions/ERC721Mintable.sol';
+import './ERC721PresetToken.sol';
 
-contract ERC721PresetMarket is Ownable, Withdrawable {
+contract ERC721PresetMarket is Ownable {
 
     // ==========-==========-==========-==========-==========-==========
     // Multi Sales
@@ -77,16 +76,17 @@ contract ERC721PresetMarket is Ownable, Withdrawable {
     }
 
     function mint(
+        address minter,
         uint256 tokenId,
         uint256 maxMintAmount,
         bytes32[] memory merkleProof
     ) public payable {
-        checkMint(msg.sender, tokenId, maxMintAmount, merkleProof);
+        checkMint(minter, tokenId, maxMintAmount, merkleProof);
         if (msg.value < _currentSale.price) revert InsufficientFunds();
         if (_currentSale.merkleRoot > 0) {
-            _salesOfOwner[msg.sender][_currentSale.id] += 1;
+            _salesOfOwner[minter][_currentSale.id] += 1;
         }
-        ERC721Mintable(tokenContract).mint(msg.sender, tokenId);
+        ERC721PresetToken(tokenContract).mint(minter, tokenId);
     }
 
     function checkMint(
@@ -98,7 +98,7 @@ contract ERC721PresetMarket is Ownable, Withdrawable {
         if (tokenContract == address(0)) revert InvalidTokenContract();
         if (_currentSale.id == 0) revert NotForSale();
         if (tokenId == 0 || _currentSale.maxSupply < tokenId) revert InvalidTokenId();
-        if (ERC721Mintable(tokenContract).exists(tokenId)) revert TokenAlreadyMinted();
+        if (ERC721PresetToken(tokenContract).exists(tokenId)) revert TokenAlreadyMinted();
         if (_currentSale.startTime > block.timestamp) revert SaleHasNotStarted();
         if (_currentSale.endTime != 0 && _currentSale.endTime < block.timestamp) revert SaleHasEnded();
         if (_currentSale.merkleRoot > 0) {
@@ -123,7 +123,16 @@ contract ERC721PresetMarket is Ownable, Withdrawable {
     // Withdraw
     // ==========-==========-==========-==========-==========-==========
 
+    event Withdrawn(address indexed payee, uint256 weiAmount);
+
     function withdraw() external onlyOwner {
-        _withdraw(payable(owner()));
+        address payee = payable(owner());
+        uint256 balance = address(this).balance;
+        require(0 < balance, 'Withdrawable: 0 Balance');
+
+        (bool success, ) = payee.call{ value: balance }('');
+        require(success, 'Withdrawable: Transfer failed');
+
+        emit Withdrawn(payee, balance);
     }
 }

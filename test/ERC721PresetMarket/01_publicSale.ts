@@ -33,7 +33,7 @@ describe('Public Sale', function () {
   it('Saleが無いとMintできない', async function () {
     expect((await obj.market.getCurrentSale()).id).to.equal(0)
     await expect(
-      obj.market.connect(obj.guest).mint(1, 0, [])
+      obj.market.connect(obj.guest).mint(obj.guest.address, 1, 0, [])
     ).to.be.revertedWithCustomError(obj.market, 'NotForSale')
   })
 
@@ -62,7 +62,7 @@ describe('Public Sale', function () {
     expect(await obj.contract.hasRole(obj.minterRole, obj.market.target)).to.be
       .false
     await expect(
-      obj.market.connect(obj.guest).mint(1, 0, [], {
+      obj.market.connect(obj.guest).mint(obj.guest.address, 1, 0, [], {
         value: ethers.parseEther('0.1'),
       })
     ).to.be.revertedWithCustomError(
@@ -96,7 +96,7 @@ describe('Public Sale', function () {
 
   it('AL無しでMintできる', async function () {
     await expect(
-      obj.market.connect(obj.guest).mint(1, 0, [], {
+      obj.market.connect(obj.guest).mint(obj.guest.address, 1, 0, [], {
         value: ethers.parseEther('0.1'),
       })
     )
@@ -110,15 +110,17 @@ describe('Public Sale', function () {
     await expect(
       obj.market
         .connect(obj.guest)
-        .mint(2, 0, [], { value: ethers.parseEther('0.05') })
+        .mint(obj.guest.address, 2, 0, [], { value: ethers.parseEther('0.05') })
     ).to.be.revertedWithCustomError(obj.market, 'InsufficientFunds')
   })
 
   it('ALがあってもエラーにならない', async function () {
     await expect(
-      obj.market.connect(obj.guest).mint(2, 1, [ethers.ZeroHash], {
-        value: ethers.parseEther('0.1'),
-      })
+      obj.market
+        .connect(obj.guest)
+        .mint(obj.guest.address, 2, 1, [ethers.ZeroHash], {
+          value: ethers.parseEther('0.1'),
+        })
     )
       .to.emit(obj.contract, 'Transfer')
       .withArgs(ethers.ZeroAddress, obj.guest.address, 2)
@@ -128,7 +130,7 @@ describe('Public Sale', function () {
 
   it('セール数を超えたTokenIdはMintはできない', async function () {
     await expect(
-      obj.market.connect(obj.guest).mint(3, 0, [], {
+      obj.market.connect(obj.guest).mint(obj.guest.address, 3, 0, [], {
         value: ethers.parseEther('0.1'),
       })
     ).to.be.revertedWithCustomError(obj.market, 'InvalidTokenId')

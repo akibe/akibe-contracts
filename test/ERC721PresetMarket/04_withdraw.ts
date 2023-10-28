@@ -12,8 +12,8 @@ describe('Withdraw', function () {
     await obj.contract.grantRole(obj.minterRole, obj.market.target)
     await obj.market.setCurrentSale(
       1,
-      Math.floor(Date.now() / 1000) - 10,
-      Math.floor(Date.now() / 1000) + 10,
+      Math.floor(Date.now() / 1000) - 100,
+      Math.floor(Date.now() / 1000) + 100,
       ethers.parseEther('0.1'),
       2,
       ethers.ZeroHash
@@ -21,10 +21,10 @@ describe('Withdraw', function () {
   })
 
   it('ミント料金が正しくコントラクトに保管される', async function () {
-    await obj.market.connect(obj.guest).mint(1, 0, [], {
+    await obj.market.connect(obj.guest).mint(obj.guest.address, 1, 0, [], {
       value: ethers.parseEther('0.1'),
     })
-    await obj.market.connect(obj.guest).mint(2, 0, [], {
+    await obj.market.connect(obj.guest).mint(obj.guest.address, 2, 0, [], {
       value: ethers.parseEther('0.1'),
     })
 

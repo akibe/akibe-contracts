@@ -7,19 +7,13 @@ pragma solidity ^0.8.9;
  */
 
 import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
-import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Royalty.sol';
-import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol';
-import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol';
+import '@openzeppelin/contracts/token/common/ERC2981.sol';
 import '@openzeppelin/contracts/access/AccessControl.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
-import './extensions/ERC721Mintable.sol';
 
 contract ERC721PresetToken is
     ERC721Enumerable,
-    ERC721Royalty,
-    ERC721Pausable,
-    ERC721Burnable,
-    ERC721Mintable,
+    ERC2981,
     AccessControl,
     Ownable
 {
@@ -44,27 +38,35 @@ contract ERC721PresetToken is
     )
         public
         view
-        override(ERC721, ERC721Enumerable, ERC721Royalty, ERC721Mintable, AccessControl)
+        override(ERC721Enumerable, ERC2981, AccessControl)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
     }
 
-    function _update(address to, uint256 tokenId, address auth)
-        internal
-        override(ERC721, ERC721Enumerable, ERC721Pausable)
-        returns (address)
-    {
+    function _update(address to, uint256 tokenId, address auth) internal override returns (address) {
         return super._update(to, tokenId, auth);
     }
 
-    function _increaseBalance(address account, uint128 value)
-        internal
-        override(ERC721, ERC721Enumerable)
-    {
+    function _increaseBalance(address account, uint128 value) internal override {
         super._increaseBalance(account, value);
     }
 
+    // ========== Metadata
+    function _baseURI() internal view override returns (string memory) {
+        return _baseTokenURI;
+    }
+
+    function setBaseURI(string memory baseTokenURI) public onlyOwner {
+        _baseTokenURI = baseTokenURI;
+    }
+
+    // ========== Royalty
+    function setDefaultRoyalty(address receiver, uint96 value) external onlyOwner {
+        _setDefaultRoyalty(receiver, value);
+    }
+
+    // ========== Token
     function tokensOfOwner(
         address owner
     ) external view returns (uint256[] memory) {
@@ -85,31 +87,11 @@ contract ERC721PresetToken is
         return tokens;
     }
 
-    // ========== Metadata
-    function _baseURI() internal view override returns (string memory) {
-        return _baseTokenURI;
+    function exists(uint256 tokenId) public view returns (bool) {
+        return _ownerOf(tokenId) != address(0);
     }
 
-    function setBaseURI(string memory baseTokenURI) public onlyOwner {
-        _baseTokenURI = baseTokenURI;
-    }
-
-    // ========== Royalty
-    function setDefaultRoyalty(address receiver, uint96 value) external onlyOwner {
-        _setDefaultRoyalty(receiver, value);
-    }
-
-    // ========== Pausable
-    function pause() external onlyOwner whenNotPaused {
-        _pause();
-    }
-
-    function unpause() external onlyOwner whenPaused {
-        _unpause();
-    }
-
-    // ========== Mintable
-    function mint(address to, uint256 tokenId) public override onlyRole(MINTER_ROLE) {
-        super.mint(to, tokenId);
+    function mint(address to, uint256 tokenId) public onlyRole(MINTER_ROLE)  {
+        _safeMint(to, tokenId);
     }
 }
