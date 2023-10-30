@@ -80,7 +80,7 @@ contract ERC721APresetMarket is Ownable {
         uint256 maxMintAmount,
         bytes32[] memory merkleProof
     ) public payable {
-        checkMint(minter, quantity, maxMintAmount, merkleProof);
+        checkMint( minter, quantity, maxMintAmount, merkleProof);
         if (msg.value < _currentSale.price) revert InsufficientFunds();
         if (_currentSale.merkleRoot > 0) {
             _salesOfOwner[minter][_currentSale.id] += quantity;
@@ -94,17 +94,33 @@ contract ERC721APresetMarket is Ownable {
         uint256 maxMintAmount,
         bytes32[] memory merkleProof
     ) public view returns (bool) {
+        isSale();
+        if (quantity == 0 || _currentSale.maxSupply < quantity) revert InvalidQuantity();
+        uint256 mintAmount = getMintAmount( minter, maxMintAmount, merkleProof);
+        if (mintAmount < quantity) revert OverMintLimit();
+        return true;
+    }
+
+    function isSale() public view returns (bool) {
         if (tokenContract == address(0)) revert InvalidTokenContract();
         if (_currentSale.id == 0) revert NotForSale();
         if (_currentSale.startTime > block.timestamp) revert SaleHasNotStarted();
         if (_currentSale.endTime != 0 && _currentSale.endTime < block.timestamp) revert SaleHasEnded();
-        uint256 nextTokenId = ERC721APresetToken(tokenContract).nextTokenId();
-        if (quantity == 0 || _currentSale.maxSupply < (nextTokenId + quantity - 1)) revert InvalidQuantity();
-        if (_currentSale.merkleRoot > 0) {
-            if (!checkMerkleProof(minter, maxMintAmount, merkleProof)) revert NotAllowlisted();
-            if (_salesOfOwner[minter][_currentSale.id] + quantity > maxMintAmount) revert OverMintLimit();
-        }
         return true;
+    }
+
+    function getMintAmount(
+        address minter,
+        uint256 maxMintAmount,
+        bytes32[] memory merkleProof
+    ) public view returns (uint256) {
+        uint256 nextTokenId = ERC721APresetToken(tokenContract).nextTokenId();
+        if (_currentSale.maxSupply < nextTokenId) return 0;
+        if (_currentSale.merkleRoot > 0) {
+            if (!checkMerkleProof(minter, maxMintAmount, merkleProof) || maxMintAmount <= _salesOfOwner[minter][_currentSale.id]) return 0;
+            return maxMintAmount - _salesOfOwner[minter][_currentSale.id];
+        }
+        return _currentSale.maxSupply - nextTokenId + 1;
     }
 
     function checkMerkleProof(

@@ -1,5 +1,5 @@
 import '@nomicfoundation/hardhat-chai-matchers'
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
@@ -14,13 +14,14 @@ describe('Time Sale', function () {
   })
 
   it('過去のSaleを追加できる', async function () {
+    const now = await time.latest()
     await expect(
       obj.market
         .connect(obj.owner)
         .setCurrentSale(
           1,
-          Math.floor(Date.now() / 1000) - 200,
-          Math.floor(Date.now() / 1000) - 100,
+          now - 200,
+          now - 100,
           ethers.parseEther('0.1'),
           1,
           ethers.ZeroHash
@@ -40,13 +41,14 @@ describe('Time Sale', function () {
   })
 
   it('未来のSaleを追加できる', async function () {
+    const now = await time.latest()
     await expect(
       obj.market
         .connect(obj.owner)
         .setCurrentSale(
           2,
-          Math.floor(Date.now() / 1000) + 100,
-          Math.floor(Date.now() / 1000) + 200,
+          now + 100,
+          now + 200,
           ethers.parseEther('0.1'),
           2,
           ethers.ZeroHash
@@ -66,13 +68,14 @@ describe('Time Sale', function () {
   })
 
   it('現在のSaleを追加できる', async function () {
+    const now = await time.latest()
     await expect(
       obj.market
         .connect(obj.owner)
         .setCurrentSale(
           3,
-          Math.floor(Date.now() / 1000) - 100,
-          Math.floor(Date.now() / 1000) + 100,
+          now - 100,
+          now + 100,
           ethers.parseEther('0.1'),
           3,
           ethers.ZeroHash

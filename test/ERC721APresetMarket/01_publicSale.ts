@@ -128,12 +128,12 @@ describe('Public Sale', function () {
     expect(await obj.contract.balanceOf(obj.guest.address)).to.equal(2)
   })
 
-  it('セール数を超えたTokenはMintはできない', async function () {
+  it('セール数を超えたTokenはMintできない', async function () {
     await expect(
       obj.market.connect(obj.guest).mint(obj.guest.address, 1, 0, [], {
         value: ethers.parseEther('0.1'),
       })
-    ).to.be.revertedWithCustomError(obj.market, 'InvalidQuantity')
+    ).to.be.revertedWithCustomError(obj.market, 'OverMintLimit')
     expect(await obj.contract.totalSupply()).to.equal(2)
     expect(await obj.contract.balanceOf(obj.guest.address)).to.equal(2)
   })

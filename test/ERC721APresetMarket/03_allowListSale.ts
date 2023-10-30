@@ -15,12 +15,12 @@ describe('AllowList Sale', function () {
 
     obj.al1 = makeMarkleTree([
       [obj.owner.address, 2],
-      [obj.guest.address, 2],
+      [obj.guest.address, 3],
     ])
 
     obj.al2 = makeMarkleTree([
       [obj.owner.address, 2],
-      [obj.guest.address, 2],
+      [obj.guest.address, 3],
       [obj.addr[0].address, 2],
     ])
   })
@@ -39,9 +39,9 @@ describe('AllowList Sale', function () {
   it('ALユーザーでもProofが無いとMintできない', async function () {
     await expect(
       obj.market
-        .connect(obj.owner)
-        .mint(obj.owner.address, 1, 1, [], { value: ethers.parseEther('0.1') })
-    ).to.be.revertedWithCustomError(obj.market, 'NotAllowlisted')
+        .connect(obj.guest)
+        .mint(obj.guest.address, 1, 1, [], { value: ethers.parseEther('0.1') })
+    ).to.be.revertedWithCustomError(obj.market, 'OverMintLimit')
   })
 
   it('ALユーザーはProof付きでMintできる', async function () {
@@ -75,14 +75,14 @@ describe('AllowList Sale', function () {
     await expect(
       obj.market
         .connect(obj.guest)
-        .mint(obj.guest.address, 1, tree.count, tree.proof, {
+        .mint(obj.guest.address, 2, tree.count, tree.proof, {
           value: ethers.parseEther('0.1'),
         })
     )
       .to.emit(obj.contract, 'Transfer')
-      .withArgs(ethers.ZeroAddress, obj.guest.address, 2)
-    expect(await obj.contract.totalSupply()).to.equal(2)
-    expect(await obj.contract.balanceOf(obj.guest.address)).to.equal(2)
+      .withArgs(ethers.ZeroAddress, obj.guest.address, 3)
+    expect(await obj.contract.totalSupply()).to.equal(3)
+    expect(await obj.contract.balanceOf(obj.guest.address)).to.equal(3)
   })
 
   it('ALの保有数を超えたMintはできない', async function () {
@@ -94,10 +94,10 @@ describe('AllowList Sale', function () {
           value: ethers.parseEther('0.1'),
         })
     ).to.be.revertedWithCustomError(obj.market, 'OverMintLimit')
-    expect(await obj.contract.balanceOf(obj.guest.address)).to.equal(2)
+    expect(await obj.contract.balanceOf(obj.guest.address)).to.equal(3)
   })
 
-  it('MaxSupplyを超えたTokenIdはミントできない', async function () {
+  it('MaxSupplyを超えたミントはできない', async function () {
     const tree = obj.al1.proofs[obj.owner.address]
     await expect(
       obj.market
@@ -105,17 +105,7 @@ describe('AllowList Sale', function () {
         .mint(obj.owner.address, 1, tree.count, tree.proof, {
           value: ethers.parseEther('0.1'),
         })
-    )
-      .to.emit(obj.contract, 'Transfer')
-      .withArgs(ethers.ZeroAddress, obj.owner.address, 3)
-
-    await expect(
-      obj.market
-        .connect(obj.owner)
-        .mint(obj.owner.address, 1, tree.count, tree.proof, {
-          value: ethers.parseEther('0.1'),
-        })
-    ).to.be.revertedWithCustomError(obj.market, 'InvalidQuantity')
+    ).to.be.revertedWithCustomError(obj.market, 'OverMintLimit')
   })
 
   it('ALを変えて同じIDのSaleを追加できる', async function () {
@@ -130,21 +120,11 @@ describe('AllowList Sale', function () {
   })
 
   it('同じIDのSaleはMint可能数が引き継がれる', async function () {
-    const tree = obj.al2.proofs[obj.owner.address]
+    const tree = obj.al2.proofs[obj.guest.address]
     await expect(
       obj.market
-        .connect(obj.owner)
-        .mint(obj.owner.address, 1, tree.count, tree.proof, {
-          value: ethers.parseEther('0.1'),
-        })
-    )
-      .to.emit(obj.contract, 'Transfer')
-      .withArgs(ethers.ZeroAddress, obj.owner.address, 4)
-
-    await expect(
-      obj.market
-        .connect(obj.owner)
-        .mint(obj.owner.address, 1, tree.count, tree.proof, {
+        .connect(obj.guest)
+        .mint(obj.guest.address, 1, tree.count, tree.proof, {
           value: ethers.parseEther('0.1'),
         })
     ).to.be.revertedWithCustomError(obj.market, 'OverMintLimit')
@@ -162,16 +142,16 @@ describe('AllowList Sale', function () {
   })
 
   it('IDを変えてSaleを追加するとMint可能数がリセットされる', async function () {
-    const tree = obj.al2.proofs[obj.owner.address]
+    const tree = obj.al2.proofs[obj.guest.address]
     await expect(
       obj.market
-        .connect(obj.owner)
-        .mint(obj.owner.address, 1, tree.count, tree.proof, {
+        .connect(obj.guest)
+        .mint(obj.guest.address, 1, tree.count, tree.proof, {
           value: ethers.parseEther('0.1'),
         })
     )
       .to.emit(obj.contract, 'Transfer')
-      .withArgs(ethers.ZeroAddress, obj.owner.address, 5)
+      .withArgs(ethers.ZeroAddress, obj.guest.address, 4)
   })
 
   it('Quantityは0だとミントできない', async function () {
@@ -183,39 +163,25 @@ describe('AllowList Sale', function () {
           value: ethers.parseEther('0.1'),
         })
     ).to.be.revertedWithCustomError(obj.market, 'InvalidQuantity')
-  })
-  it('オーナーであってもQuantityが0だとミントできない', async function () {
-    const tree = obj.al2.proofs[obj.guest.address]
+
+    const tree2 = obj.al2.proofs[obj.owner.address]
     await expect(
       obj.market
         .connect(obj.owner)
-        .mint(obj.owner.address, 0, tree.count, tree.proof, {
+        .mint(obj.owner.address, 0, tree2.count, tree2.proof, {
           value: ethers.parseEther('0.1'),
         })
     ).to.be.revertedWithCustomError(obj.market, 'InvalidQuantity')
   })
+
   it('セール数を超えたMintはできない', async function () {
     const tree = obj.al2.proofs[obj.owner.address]
     await expect(
       obj.market
         .connect(obj.owner)
-        .mint(obj.owner.address, 1, tree.count, tree.proof, {
-          value: ethers.parseEther('0.1'),
-        })
-    )
-      .to.emit(obj.contract, 'Transfer')
-      .withArgs(ethers.ZeroAddress, obj.owner.address, 6)
-    expect(await obj.contract.totalSupply()).to.equal(6)
-    expect(await obj.contract.balanceOf(obj.owner.address)).to.equal(4)
-
-    await expect(
-      obj.market
-        .connect(obj.owner)
-        .mint(obj.owner.address, 1, tree.count, tree.proof, {
+        .mint(obj.owner.address, 10, tree.count, tree.proof, {
           value: ethers.parseEther('0.1'),
         })
     ).to.be.revertedWithCustomError(obj.market, 'InvalidQuantity')
-    expect(await obj.contract.totalSupply()).to.equal(6)
-    expect(await obj.contract.balanceOf(obj.owner.address)).to.equal(4)
   })
 })

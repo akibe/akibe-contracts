@@ -36,12 +36,26 @@ describe('AllowList Sale', function () {
     expect((await obj.market.getCurrentSale()).id).to.equal(1)
   })
 
+  it('AL無しだとミントできない', async function () {
+    const tree = obj.al1.proofs[obj.addr[0].address] || {
+      count: 0,
+      proof: [],
+    }
+    await expect(
+      obj.market
+        .connect(obj.addr[0])
+        .mint(obj.addr[0].address, 1, tree.count, tree.proof, {
+          value: ethers.parseEther('0.1'),
+        })
+    ).to.be.revertedWithCustomError(obj.market, 'OverMintLimit')
+  })
+
   it('ALユーザーでもProofが無いとMintできない', async function () {
     await expect(
       obj.market
         .connect(obj.owner)
         .mint(obj.owner.address, 1, 1, [], { value: ethers.parseEther('0.1') })
-    ).to.be.revertedWithCustomError(obj.market, 'NotAllowlisted')
+    ).to.be.revertedWithCustomError(obj.market, 'OverMintLimit')
   })
 
   it('ALユーザーはProof付きでMintできる', async function () {

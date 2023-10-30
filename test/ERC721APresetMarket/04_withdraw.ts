@@ -1,5 +1,5 @@
 import '@nomicfoundation/hardhat-chai-matchers'
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { deployContractFixture } from './00_before'
@@ -10,10 +10,11 @@ describe('Withdraw', function () {
     obj = await loadFixture(deployContractFixture)
     await obj.market.setTokenContract(obj.contract.target)
     await obj.contract.grantRole(obj.minterRole, obj.market.target)
+    const now = await time.latest()
     await obj.market.setCurrentSale(
       1,
-      Math.floor(Date.now() / 1000) - 100,
-      Math.floor(Date.now() / 1000) + 100,
+      now - 100,
+      now + 100,
       ethers.parseEther('0.1'),
       2,
       ethers.ZeroHash

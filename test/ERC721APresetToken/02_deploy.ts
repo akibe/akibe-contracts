@@ -21,7 +21,6 @@ describe('Deploy', function () {
   it('ミント数が0である', async function () {
     expect(await obj.contract.totalSupply()).to.equal(0)
   })
-
   it('Marketコントラクトのオーナーが正しい', async function () {
     expect(await obj.contract.owner()).to.equal(obj.owner.address)
   })
