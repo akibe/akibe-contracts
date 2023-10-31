@@ -118,11 +118,13 @@ contract ERC721PresetMarket is Ownable {
     ) public view returns (uint256) {
         uint256 totalSupply = ERC721PresetToken(tokenContract).totalSupply();
         if (_currentSale.maxSupply <= totalSupply) return 0;
+        uint256 maxSupply = _currentSale.maxSupply - totalSupply;
         if (_currentSale.merkleRoot > 0) {
             if (!checkMerkleProof(minter, maxMintAmount, merkleProof) || maxMintAmount <= _salesOfOwner[minter][_currentSale.id]) return 0;
-            return maxMintAmount - _salesOfOwner[minter][_currentSale.id];
+            uint256 maxAmount = maxMintAmount - _salesOfOwner[minter][_currentSale.id];
+            if (maxSupply > maxAmount) return maxAmount;
         }
-        return _currentSale.maxSupply - totalSupply;
+        return maxSupply;
     }
 
     function checkMerkleProof(

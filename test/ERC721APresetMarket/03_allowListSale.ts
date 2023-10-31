@@ -14,12 +14,12 @@ describe('AllowList Sale', function () {
     await obj.contract.grantRole(obj.minterRole, obj.market.target)
 
     obj.al1 = makeMarkleTree([
-      [obj.owner.address, 2],
+      [obj.owner.address, 5],
       [obj.guest.address, 3],
     ])
 
     obj.al2 = makeMarkleTree([
-      [obj.owner.address, 2],
+      [obj.owner.address, 5],
       [obj.guest.address, 3],
       [obj.addr[0].address, 2],
     ])
@@ -29,11 +29,33 @@ describe('AllowList Sale', function () {
     await expect(
       obj.market
         .connect(obj.owner)
-        .setCurrentSale(1, 0, 0, ethers.parseEther('0.1'), 3, obj.al1.tree.root)
+        .setCurrentSale(1, 0, 0, ethers.parseEther('0.1'), 4, obj.al1.tree.root)
     )
       .to.emit(obj.market, 'ChangeSale')
-      .withArgs(1, 3)
+      .withArgs(1, 4)
     expect((await obj.market.getCurrentSale()).id).to.equal(1)
+  })
+
+  it('残りミント数を正しく取得できる', async function () {
+    const tree = obj.al1.proofs[obj.owner.address] || {
+      count: 0,
+      proof: [],
+    }
+    expect(
+      await obj.market.getMintAmount(obj.owner.address, tree.count, tree.proof)
+    ).to.equal(4)
+
+    const tree2 = obj.al1.proofs[obj.guest.address] || {
+      count: 0,
+      proof: [],
+    }
+    expect(
+      await obj.market.getMintAmount(
+        obj.guest.address,
+        tree2.count,
+        tree2.proof
+      )
+    ).to.equal(3)
   })
 
   it('ALユーザーでもProofが無いとMintできない', async function () {
@@ -102,7 +124,7 @@ describe('AllowList Sale', function () {
     await expect(
       obj.market
         .connect(obj.owner)
-        .mint(obj.owner.address, 1, tree.count, tree.proof, {
+        .mint(obj.owner.address, 3, tree.count, tree.proof, {
           value: ethers.parseEther('0.1'),
         })
     ).to.be.revertedWithCustomError(obj.market, 'OverMintLimit')
@@ -134,14 +156,30 @@ describe('AllowList Sale', function () {
     await expect(
       obj.market
         .connect(obj.owner)
-        .setCurrentSale(2, 0, 0, ethers.parseEther('0.1'), 6, obj.al2.tree.root)
+        .setCurrentSale(2, 0, 0, ethers.parseEther('0.1'), 8, obj.al2.tree.root)
     )
       .to.emit(obj.market, 'ChangeSale')
-      .withArgs(2, 6)
+      .withArgs(2, 8)
     expect((await obj.market.getCurrentSale()).id).to.equal(2)
   })
 
   it('IDを変えてSaleを追加するとMint可能数がリセットされる', async function () {
+    const tree = obj.al2.proofs[obj.owner.address]
+    expect(
+      await obj.market.getMintAmount(obj.owner.address, tree.count, tree.proof)
+    ).to.equal(5)
+
+    const tree2 = obj.al2.proofs[obj.guest.address]
+    expect(
+      await obj.market.getMintAmount(
+        obj.guest.address,
+        tree2.count,
+        tree2.proof
+      )
+    ).to.equal(3)
+  })
+
+  it('購入限度だったユーザーはまたミント可能になる', async function () {
     const tree = obj.al2.proofs[obj.guest.address]
     await expect(
       obj.market
@@ -183,5 +221,11 @@ describe('AllowList Sale', function () {
           value: ethers.parseEther('0.1'),
         })
     ).to.be.revertedWithCustomError(obj.market, 'InvalidQuantity')
+  })
+
+  it('トークン数の確認', async function () {
+    expect(await obj.contract.totalSupply()).to.equal(4)
+    expect(await obj.contract.balanceOf(obj.owner.address)).to.equal(0)
+    expect(await obj.contract.balanceOf(obj.guest.address)).to.equal(4)
   })
 })
