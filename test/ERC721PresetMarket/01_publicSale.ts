@@ -42,7 +42,15 @@ describe('Public Sale', function () {
     await expect(
       obj.market
         .connect(obj.guest)
-        .setCurrentSale(1, 0, 0, ethers.parseEther('0.1'), 2, ethers.ZeroHash)
+        .setCurrentSale(
+          1,
+          1,
+          2,
+          0,
+          0,
+          ethers.parseEther('0.1'),
+          ethers.ZeroHash
+        )
     ).to.be.revertedWithCustomError(obj.contract, 'OwnableUnauthorizedAccount')
     expect((await obj.market.getCurrentSale()).id).to.equal(0)
   })
@@ -51,11 +59,19 @@ describe('Public Sale', function () {
     await expect(
       obj.market
         .connect(obj.owner)
-        .setCurrentSale(1, 0, 0, ethers.parseEther('0.1'), 2, ethers.ZeroHash)
+        .setCurrentSale(
+          2,
+          1,
+          2,
+          0,
+          0,
+          ethers.parseEther('0.1'),
+          ethers.ZeroHash
+        )
     )
       .to.emit(obj.market, 'ChangeSale')
-      .withArgs(1, 2)
-    expect((await obj.market.getCurrentSale()).id).to.equal(1)
+      .withArgs(2)
+    expect((await obj.market.getCurrentSale()).id).to.equal(2)
   })
 
   it('Minterが未登録だとmintできない', async function () {

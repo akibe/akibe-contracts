@@ -16,19 +16,20 @@ contract ERC721PresetMarket is Ownable {
     // Multi Sales
     // ==========-==========-==========-==========-==========-==========
 
-    event ChangeSale(uint8 newId, uint216 newSupply);
+    event ChangeSale(uint32 newId);
 
     struct Sale {
-        uint8 id;
-        uint256 startTime;
-        uint256 endTime;
+        uint32 id;
+        uint32 group;
+        uint64 maxSupply;
+        uint64 startTime;
+        uint64 endTime;
         uint256 price;
-        uint216 maxSupply;
         bytes32 merkleRoot;
     }
 
     Sale internal _currentSale;
-    mapping(address => mapping(uint8 => uint256)) internal _salesOfOwner;
+    mapping(address => mapping(uint32 => uint256)) internal _salesOfOwner;
 
     constructor() Ownable(msg.sender) {}
 
@@ -37,22 +38,24 @@ contract ERC721PresetMarket is Ownable {
     }
 
     function setCurrentSale(
-        uint8 id,
-        uint256 startTime,
-        uint256 endTime,
+        uint32 id,
+        uint32 group,
+        uint64 maxSupply,
+        uint64 startTime,
+        uint64 endTime,
         uint256 price,
-        uint216 maxSupply,
         bytes32 merkleRoot
     ) external onlyOwner {
         _currentSale = Sale({
             id: id,
+            group: group,
+            maxSupply: maxSupply,
             startTime: startTime,
             endTime: endTime,
             price: price,
-            maxSupply: maxSupply,
             merkleRoot: merkleRoot
         });
-        emit ChangeSale(id, maxSupply);
+        emit ChangeSale(id);
     }
 
     // ==========-==========-==========-==========-==========-==========
@@ -78,13 +81,13 @@ contract ERC721PresetMarket is Ownable {
     function mint(
         address minter,
         uint256 tokenId,
-        uint256 maxMintAmount,
+        uint256 maxQuantity,
         bytes32[] memory merkleProof
     ) public payable {
-        checkMint( minter, tokenId, maxMintAmount, merkleProof);
+        checkMint( minter, tokenId, maxQuantity, merkleProof);
         if (msg.value < _currentSale.price) revert InsufficientFunds();
         if (_currentSale.merkleRoot > 0) {
-            _salesOfOwner[minter][_currentSale.id] += 1;
+            _salesOfOwner[minter][_currentSale.group] += 1;
         }
         ERC721PresetToken(tokenContract).mint(minter, tokenId);
     }
@@ -92,14 +95,14 @@ contract ERC721PresetMarket is Ownable {
     function checkMint(
         address minter,
         uint256 tokenId,
-        uint256 maxMintAmount,
+        uint256 maxQuantity,
         bytes32[] memory merkleProof
     ) public view returns (bool) {
         isSale();
         if (tokenId == 0 || _currentSale.maxSupply < tokenId) revert InvalidTokenId();
         if (ERC721PresetToken(tokenContract).exists(tokenId)) revert TokenAlreadyMinted();
-        uint256 mintAmount = getMintAmount( minter, maxMintAmount, merkleProof);
-        if (mintAmount < 1) revert OverMintLimit();
+        uint256 mintLimit = getMintLimit( minter, maxQuantity, merkleProof);
+        if (mintLimit < 1) revert OverMintLimit();
         return true;
     }
 
@@ -111,29 +114,29 @@ contract ERC721PresetMarket is Ownable {
         return true;
     }
 
-    function getMintAmount(
+    function getMintLimit(
         address minter,
-        uint256 maxMintAmount,
+        uint256 maxQuantity,
         bytes32[] memory merkleProof
     ) public view returns (uint256) {
         uint256 totalSupply = ERC721PresetToken(tokenContract).totalSupply();
         if (_currentSale.maxSupply <= totalSupply) return 0;
         uint256 maxSupply = _currentSale.maxSupply - totalSupply;
         if (_currentSale.merkleRoot > 0) {
-            if (!checkMerkleProof(minter, maxMintAmount, merkleProof) || maxMintAmount <= _salesOfOwner[minter][_currentSale.id]) return 0;
-            uint256 maxAmount = maxMintAmount - _salesOfOwner[minter][_currentSale.id];
-            if (maxSupply > maxAmount) return maxAmount;
+            if (!checkMerkleProof(minter, maxQuantity, merkleProof) || maxQuantity <= _salesOfOwner[minter][_currentSale.group]) return 0;
+            uint256 quantity = maxQuantity - _salesOfOwner[minter][_currentSale.group];
+            if (maxSupply > quantity) return quantity;
         }
         return maxSupply;
     }
 
     function checkMerkleProof(
         address minter,
-        uint256 maxMintAmount,
+        uint256 maxQuantity,
         bytes32[] memory merkleProof
     ) internal view returns (bool) {
         bytes32 leaf = keccak256(
-            bytes.concat(keccak256(abi.encode(minter, maxMintAmount)))
+            bytes.concat(keccak256(abi.encode(minter, maxQuantity)))
         );
         return MerkleProof.verify(merkleProof, _currentSale.merkleRoot, leaf);
     }

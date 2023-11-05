@@ -13,10 +13,11 @@ describe('Withdraw', function () {
     const now = await time.latest()
     await obj.market.setCurrentSale(
       1,
+      1,
+      2,
       now - 100,
       now + 100,
       ethers.parseEther('0.1'),
-      2,
       ethers.ZeroHash
     )
   })

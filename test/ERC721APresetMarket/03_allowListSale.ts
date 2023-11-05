@@ -29,10 +29,18 @@ describe('AllowList Sale', function () {
     await expect(
       obj.market
         .connect(obj.owner)
-        .setCurrentSale(1, 0, 0, ethers.parseEther('0.1'), 4, obj.al1.tree.root)
+        .setCurrentSale(
+          1,
+          1,
+          4,
+          0,
+          0,
+          ethers.parseEther('0.1'),
+          obj.al1.tree.root
+        )
     )
       .to.emit(obj.market, 'ChangeSale')
-      .withArgs(1, 4)
+      .withArgs(1)
     expect((await obj.market.getCurrentSale()).id).to.equal(1)
   })
 
@@ -42,7 +50,7 @@ describe('AllowList Sale', function () {
       proof: [],
     }
     expect(
-      await obj.market.getMintAmount(obj.owner.address, tree.count, tree.proof)
+      await obj.market.getMintLimit(obj.owner.address, tree.count, tree.proof)
     ).to.equal(4)
 
     const tree2 = obj.al1.proofs[obj.guest.address] || {
@@ -50,11 +58,7 @@ describe('AllowList Sale', function () {
       proof: [],
     }
     expect(
-      await obj.market.getMintAmount(
-        obj.guest.address,
-        tree2.count,
-        tree2.proof
-      )
+      await obj.market.getMintLimit(obj.guest.address, tree2.count, tree2.proof)
     ).to.equal(3)
   })
 
@@ -134,11 +138,19 @@ describe('AllowList Sale', function () {
     await expect(
       obj.market
         .connect(obj.owner)
-        .setCurrentSale(1, 0, 0, ethers.parseEther('0.1'), 6, obj.al2.tree.root)
+        .setCurrentSale(
+          2,
+          1,
+          6,
+          0,
+          0,
+          ethers.parseEther('0.1'),
+          obj.al2.tree.root
+        )
     )
       .to.emit(obj.market, 'ChangeSale')
-      .withArgs(1, 6)
-    expect((await obj.market.getCurrentSale()).id).to.equal(1)
+      .withArgs(2)
+    expect((await obj.market.getCurrentSale()).id).to.equal(2)
   })
 
   it('同じIDのSaleはMint可能数が引き継がれる', async function () {
@@ -156,26 +168,30 @@ describe('AllowList Sale', function () {
     await expect(
       obj.market
         .connect(obj.owner)
-        .setCurrentSale(2, 0, 0, ethers.parseEther('0.1'), 8, obj.al2.tree.root)
+        .setCurrentSale(
+          3,
+          2,
+          8,
+          0,
+          0,
+          ethers.parseEther('0.1'),
+          obj.al2.tree.root
+        )
     )
       .to.emit(obj.market, 'ChangeSale')
-      .withArgs(2, 8)
-    expect((await obj.market.getCurrentSale()).id).to.equal(2)
+      .withArgs(3)
+    expect((await obj.market.getCurrentSale()).id).to.equal(3)
   })
 
   it('IDを変えてSaleを追加するとMint可能数がリセットされる', async function () {
     const tree = obj.al2.proofs[obj.owner.address]
     expect(
-      await obj.market.getMintAmount(obj.owner.address, tree.count, tree.proof)
+      await obj.market.getMintLimit(obj.owner.address, tree.count, tree.proof)
     ).to.equal(5)
 
     const tree2 = obj.al2.proofs[obj.guest.address]
     expect(
-      await obj.market.getMintAmount(
-        obj.guest.address,
-        tree2.count,
-        tree2.proof
-      )
+      await obj.market.getMintLimit(obj.guest.address, tree2.count, tree2.proof)
     ).to.equal(3)
   })
 

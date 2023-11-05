@@ -20,15 +20,16 @@ describe('Time Sale', function () {
         .connect(obj.owner)
         .setCurrentSale(
           1,
+          1,
+          1,
           now - 200,
           now - 100,
           ethers.parseEther('0.1'),
-          1,
           ethers.ZeroHash
         )
     )
       .to.emit(obj.market, 'ChangeSale')
-      .withArgs(1, 1)
+      .withArgs(1)
     expect((await obj.market.getCurrentSale()).id).to.equal(1)
   })
 
@@ -47,15 +48,16 @@ describe('Time Sale', function () {
         .connect(obj.owner)
         .setCurrentSale(
           2,
+          2,
+          2,
           now + 100,
           now + 200,
           ethers.parseEther('0.1'),
-          2,
           ethers.ZeroHash
         )
     )
       .to.emit(obj.market, 'ChangeSale')
-      .withArgs(2, 2)
+      .withArgs(2)
     expect((await obj.market.getCurrentSale()).id).to.equal(2)
   })
 
@@ -74,15 +76,16 @@ describe('Time Sale', function () {
         .connect(obj.owner)
         .setCurrentSale(
           3,
+          3,
+          3,
           now - 100,
           now + 100,
           ethers.parseEther('0.1'),
-          3,
           ethers.ZeroHash
         )
     )
       .to.emit(obj.market, 'ChangeSale')
-      .withArgs(3, 3)
+      .withArgs(3)
     expect((await obj.market.getCurrentSale()).id).to.equal(3)
   })
 
