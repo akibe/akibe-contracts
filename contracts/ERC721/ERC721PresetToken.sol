@@ -44,14 +44,6 @@ contract ERC721PresetToken is
         return super.supportsInterface(interfaceId);
     }
 
-    function _update(address to, uint256 tokenId, address auth) internal override returns (address) {
-        return super._update(to, tokenId, auth);
-    }
-
-    function _increaseBalance(address account, uint128 value) internal override {
-        super._increaseBalance(account, value);
-    }
-
     // ========== Metadata
     function _baseURI() internal view override returns (string memory) {
         return _baseTokenURI;
